@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
+	"os"
 	"study-bot/internal/discord"
 	"study-bot/internal/repository"
 
@@ -24,7 +25,7 @@ func Run() {
 	}
 	defer conn.Close()
 
-	repo := repository.Open("discord_bot:elzhqht123!@tcp(minsung.me:3306)/Discord?parseTime=true")
+	repo := repository.Open(os.Getenv("DB_URL"))
 	sess := discord.NewSession()
 	bot := NewBot(sess, repo)
 	defer conn.Close()

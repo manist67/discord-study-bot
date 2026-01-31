@@ -3,6 +3,7 @@ package discord
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -50,7 +51,7 @@ func (s *Session) Handshake(event Event) {
 	s.StartHeartbeat()
 
 	identifyPayload, err := json.Marshal(IdentifyPayload{
-		Token: "MTQ2NTY4ODg4MTQzNjU1NzQ1NA.Gn3hhd.uiYiqVZZwJub0aQxDRPLJ6XgHnJUvauSFSjqyc",
+		Token: os.Getenv("DISCORD_BOT_TOKEN"),
 		Properties: struct {
 			Os      string "json:\"os\""
 			Browser string "json:\"browser\""
