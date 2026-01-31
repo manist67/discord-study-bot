@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -57,7 +58,7 @@ func (s *Session) Handshake(event Event) {
 			Browser string "json:\"browser\""
 			Device  string "json:\"device\""
 		}{
-			Os:      "windows",
+			Os:      runtime.GOOS,
 			Browser: "discordbot",
 			Device:  "discordbot",
 		},
