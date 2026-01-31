@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-func (c Conn) GetCurrentVoiceStatus(sessionId string, memberId string) (*VoiceState, error) {
-	query := "SELECT idx, guildId, sessionId, channelId, memberId, enteredAt, leavedAt FROM VoiceState WHERE sessionId = ? and memberId = ?"
+func (c Conn) GetCurrentVoiceStatus(memberId string) (*VoiceState, error) {
+	query := "SELECT idx, guildId, sessionId, channelId, memberId, enteredAt, leavedAt FROM VoiceState WHERE memberId = ? and leavedAt is null"
 
 	var s VoiceState
-	row := c.db.QueryRow(query, sessionId, memberId)
+	row := c.db.QueryRow(query, memberId)
 	if err := row.Scan(&s.Idx, &s.GuildId, &s.SessionId, &s.ChannelId, &s.MemberId, &s.enteredAt, &s.leavedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -39,10 +39,10 @@ func (c Conn) CreateVoiceState(form VoiceStateForm) error {
 	return nil
 }
 
-func (c Conn) UpdateVoiceState(sessionId string, memberId string, currentTime time.Time) error {
-	query := "UPDATE VoiceState SET leavedAt = ? WHERE sessionId = ? and memberId = ?"
+func (c Conn) UpdateVoiceState(idx int, currentTime time.Time) error {
+	query := "UPDATE VoiceState SET leavedAt = ? WHERE idx = ?"
 
-	res, err := c.db.Exec(query, currentTime, sessionId, memberId)
+	res, err := c.db.Exec(query, currentTime, idx)
 	if err != nil {
 		return err
 	}

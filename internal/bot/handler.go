@@ -66,6 +66,7 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 	}
 
 	log.Printf("watchVoiceState %v", payload.Member.User)
+	log.Printf("%v", string(p))
 	user := payload.Member.User
 	member, err := b.repo.GetMemberById(user.Id)
 	if err != nil {
@@ -82,7 +83,8 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 		member = m
 	}
 
-	state, err := b.repo.GetCurrentVoiceStatus(payload.SessionId, member.MemberId)
+	state, err := b.repo.GetCurrentVoiceStatus(member.MemberId)
+	log.Printf("state %s %s", payload.SessionId, member.MemberId)
 	if err != nil {
 		log.Printf("Err b.repo.GetCurrentVoiceStatus %s %s", payload.SessionId, member.MemberId)
 		log.Printf("%v", err)
@@ -108,7 +110,7 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 
 	if payload.ChannelId == nil {
 		n := time.Now()
-		if b.repo.UpdateVoiceState(state.SessionId, member.MemberId, n) != nil {
+		if b.repo.UpdateVoiceState(state.Idx, n) != nil {
 			log.Printf("Fail to update session. sessionId: %s memberId: %s time: %v", payload.SessionId, member.MemberId, n)
 			log.Printf("%v", err)
 			return
