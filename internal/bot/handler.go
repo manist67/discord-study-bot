@@ -12,16 +12,6 @@ type DiscordHandler interface {
 	OnEvent(event discord.Event)
 }
 
-type Bot struct {
-	session       *discord.Session
-	repo          *repository.Conn
-	applicationId string
-}
-
-func NewBot(s *discord.Session, r *repository.Conn) *Bot {
-	return &Bot{session: s, repo: r}
-}
-
 func (b *Bot) OnEvent(event discord.Event) {
 	if event.T == nil || event.D == nil {
 		return

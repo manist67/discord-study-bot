@@ -4,14 +4,25 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
-	"os"
 	"study-bot/internal/discord"
 	"study-bot/internal/repository"
 
 	"github.com/gorilla/websocket"
 )
 
-func Run() {
+type Bot struct {
+	session       *discord.Session
+	repo          *repository.Conn
+	applicationId string
+}
+
+func NewBot(r *repository.Conn) *Bot {
+	sess := discord.NewSession()
+
+	return &Bot{session: sess, repo: r}
+}
+
+func (b *Bot) Run() {
 	u := url.URL{
 		Scheme:   "wss",
 		Host:     "gateway.discord.gg",
@@ -25,14 +36,9 @@ func Run() {
 	}
 	defer conn.Close()
 
-	repo := repository.Open(os.Getenv("DB_URL"))
-	sess := discord.NewSession()
-	bot := NewBot(sess, repo)
-	defer conn.Close()
-
 	// 메세지 읽기
 	go func() {
-		defer close(sess.Stop)
+		defer close(b.session.Stop)
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
@@ -52,11 +58,11 @@ func Run() {
 
 			switch event.Op {
 			case 10:
-				sess.Handshake(event)
+				b.session.Handshake(event)
 			case 11:
-				sess.NotifyAck()
+				b.session.NotifyAck()
 			case 0:
-				bot.OnEvent(event)
+				b.OnEvent(event)
 			}
 		}
 	}()
@@ -65,17 +71,17 @@ func Run() {
 	go func() {
 		for {
 			select {
-			case message := <-sess.Send:
+			case message := <-b.session.Send:
 				log.Printf("send: %d", message.Op)
 				if err := conn.WriteJSON(message); err != nil {
 					log.Printf("unmarshal error: %v", err)
 					return
 				}
-			case <-sess.Stop:
+			case <-b.session.Stop:
 				return
 			}
 		}
 	}()
 
-	<-sess.Stop
+	<-b.session.Stop
 }
