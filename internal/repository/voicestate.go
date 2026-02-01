@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -55,4 +56,37 @@ func (c Conn) UpdateVoiceState(idx int, currentTime time.Time) error {
 	}
 
 	return nil
+}
+
+func (c *Conn) GetGuildStatistics(guildId string, now time.Time) ([]GuildStatistics, error) {
+	query := `
+		select Member.memberId, Member.memberName, time from (
+		select memberId, sum(leavedAt - enteredAt) as time
+		from VoiceState as vs
+		where 
+			guildId = ?
+			AND (DATE_FORMAT(enteredAt,  "%y-%m") = ?
+				OR DATE_FORMAT(leavedAt,  "%y-%m") = ?)
+			group by memberId 
+		) as total_table
+		left join Member on total_table.memberId  = Member.memberId 
+		order by time desc
+	`
+	nowDate := now.Format("06-01")
+
+	rows, err := c.db.Query(query, guildId, nowDate, nowDate)
+	if err != nil {
+		return []GuildStatistics{}, fmt.Errorf("GetGuildStatistics %v %v: %w", guildId, now, err)
+	}
+
+	var res []GuildStatistics
+	for rows.Next() {
+		var row GuildStatistics
+		if err := rows.Scan(&row.MemberId, &row.MemberName, &row.Time); err != nil {
+			return []GuildStatistics{}, fmt.Errorf("GetGuildStatistics scan %v %v: %w", guildId, now, err)
+		}
+		res = append(res, row)
+	}
+
+	return res, nil
 }

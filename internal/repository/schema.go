@@ -23,3 +23,9 @@ type VoiceState struct {
 	enteredAt time.Time
 	leavedAt  *time.Time
 }
+
+type GuildStatistics struct {
+	MemberId   string
+	MemberName string
+	Time       int
+}
