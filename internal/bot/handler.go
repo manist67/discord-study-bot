@@ -13,8 +13,9 @@ type DiscordHandler interface {
 }
 
 type Bot struct {
-	session *discord.Session
-	repo    *repository.Conn
+	session       *discord.Session
+	repo          *repository.Conn
+	applicationId string
 }
 
 func NewBot(s *discord.Session, r *repository.Conn) *Bot {
@@ -27,16 +28,32 @@ func (b *Bot) OnEvent(event discord.Event) {
 	}
 
 	switch *event.T {
+	case "READY":
+		b.ready(*event.D)
 	case "GUILD_CREATE":
-		b.init(*event.D)
+		b.createGuild(*event.D)
 	case "VOICE_STATE_UPDATE":
 		b.watchVoiceState(*event.D)
+	case "INTERACTION_CREATE":
+		b.handleInteraction(*event.D)
 	default:
 		log.Printf("Unhandled event type: %s", *event.T)
 	}
 }
 
-func (b *Bot) init(p json.RawMessage) {
+func (b *Bot) ready(p json.RawMessage) {
+	var payload discord.ReadyPayload
+	if err := json.Unmarshal(p, &payload); err != nil {
+		log.Printf("Fail to unmarshal payload %s", string(p))
+		return
+	}
+
+	b.applicationId = payload.User.Id
+	// slash commend 등록
+
+}
+
+func (b *Bot) createGuild(p json.RawMessage) {
 	var payload discord.GuildCreatePayload
 	if err := json.Unmarshal(p, &payload); err != nil {
 		log.Printf("Fail to unmarshal payload")
@@ -56,6 +73,8 @@ func (b *Bot) init(p json.RawMessage) {
 			return
 		}
 	}
+
+	b.registryGuildCommand(guild.GuildId)
 }
 
 func (b *Bot) watchVoiceState(p json.RawMessage) {
@@ -116,4 +135,8 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 			return
 		}
 	}
+}
+
+func (b *Bot) handleInteraction(p json.RawMessage) {
+
 }

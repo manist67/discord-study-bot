@@ -38,6 +38,11 @@ type Channel struct {
 	Name string `json:"name"`
 }
 
+type ReadyPayload struct {
+	V    int  `json:"v"`
+	User User `json:"user"`
+}
+
 type GuildCreatePayload struct {
 	Id          string        `json:"id"`
 	Name        string        `json:"name"`
@@ -52,4 +57,9 @@ type VoiceStatePayload struct {
 	UserId    string      `json:"user_id"`
 	Member    GuildMember `json:"member"`
 	SessionId string      `json:"session_id"`
+}
+
+type Application struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
