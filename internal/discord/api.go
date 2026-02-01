@@ -10,45 +10,6 @@ import (
 	"os"
 )
 
-type GuildCommandOptionType int
-
-const (
-	Mentionable GuildCommandOptionType = 9
-)
-
-type GuildCommandOption struct {
-	Type                     GuildCommandOptionType `json:"type"`
-	Name                     string                 `json:"name"`
-	Description              *string                `json:"description"`
-	DescriptionLocalizations *string                `json:"description_localizations"`
-}
-
-type CommandType int
-
-const (
-	ChatInput CommandType = 1
-)
-
-type MakeGuildCommandBody struct {
-	Name        string               `json:"name"`
-	Type        CommandType          `json:"type"`
-	Description string               `json:"description"`
-	Options     []GuildCommandOption `json:"options"`
-}
-
-type GuildCommand struct {
-	Id                       string               `json:"id"`
-	Name                     string               `json:"name"`
-	NameLocalizations        *string              `json:"name_localizations"`
-	Type                     int                  `json:"type"`
-	Description              *string              `json:"description"`
-	DescriptionLocalizations *string              `json:"description_localizations"`
-	ApplicationId            string               `json:"application_id"`
-	Version                  string               `json:"version"`
-	DefaultMemberPermissions *string              `json:"default_member_permissions"`
-	Options                  []GuildCommandOption `json:"options"`
-}
-
 func MakeGuildCommand(applicationId string, guildId string, body MakeGuildCommandBody) (GuildCommand, error) {
 	url := fmt.Sprintf("https://discord.com/api/v10/applications/%s/guilds/%s/commands", applicationId, guildId)
 
@@ -86,21 +47,6 @@ func MakeGuildCommand(applicationId string, guildId string, body MakeGuildComman
 	}
 
 	return command, nil
-}
-
-type InteractionCallbackData struct {
-	Content string `json:"content"`
-}
-
-type InteractionCallbackType int
-
-const (
-	ChannelMessageWithSource InteractionCallbackType = 4
-)
-
-type InteractionCallbackForm struct {
-	Type InteractionCallbackType `json:"type"`
-	Data InteractionCallbackData `json:"data"`
 }
 
 func InteractionCallback(interactionId string, interactionToken string, body InteractionCallbackForm) error {
