@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/url"
@@ -22,7 +23,8 @@ func NewBot(r *repository.Conn) *Bot {
 	return &Bot{session: sess, repo: r}
 }
 
-func (b *Bot) Run() {
+func (b *Bot) Run(ctx context.Context) {
+
 	u := url.URL{
 		Scheme:   "wss",
 		Host:     "gateway.discord.gg",
@@ -38,7 +40,6 @@ func (b *Bot) Run() {
 
 	// 메세지 읽기
 	go func() {
-		defer close(b.session.Stop)
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
@@ -58,7 +59,7 @@ func (b *Bot) Run() {
 
 			switch event.Op {
 			case 10:
-				b.session.Handshake(event)
+				b.session.Handshake(ctx, event)
 			case 11:
 				b.session.NotifyAck()
 			case 0:
@@ -71,17 +72,21 @@ func (b *Bot) Run() {
 	go func() {
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case message := <-b.session.Send:
 				log.Printf("send: %d", message.Op)
 				if err := conn.WriteJSON(message); err != nil {
 					log.Printf("unmarshal error: %v", err)
 					return
 				}
-			case <-b.session.Stop:
-				return
 			}
+
 		}
 	}()
 
-	<-b.session.Stop
+	<-ctx.Done()
+	log.Println("Terminating Discord bot")
+	conn.Close()
+	log.Println("Discord Bot terminated...")
 }

@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -12,7 +13,6 @@ import (
 type Session struct {
 	Interval       int
 	Send           chan Event
-	Stop           chan struct{}
 	lastAckReceive bool
 	mu             sync.Mutex
 }
@@ -33,14 +33,13 @@ func NewSession() *Session {
 	session := Session{
 		Interval:       -1,
 		Send:           make(chan Event, 10),
-		Stop:           make(chan struct{}),
 		lastAckReceive: false,
 	}
 
 	return &session
 }
 
-func (s *Session) Handshake(event Event) {
+func (s *Session) Handshake(ctx context.Context, event Event) {
 	var handshakeEvent HandshakePayload
 	if err := json.Unmarshal(*event.D, &handshakeEvent); err != nil {
 		log.Printf("Handshake marshal error %v", err)
@@ -49,7 +48,7 @@ func (s *Session) Handshake(event Event) {
 
 	log.Printf("Start heartbeat interval %d\n", handshakeEvent.HeartbeatInterval)
 	s.Interval = handshakeEvent.HeartbeatInterval
-	s.StartHeartbeat()
+	s.StartHeartbeat(ctx)
 
 	identifyPayload, err := json.Marshal(IdentifyPayload{
 		Token: os.Getenv("DISCORD_BOT_TOKEN"),
@@ -78,7 +77,7 @@ func (s *Session) Handshake(event Event) {
 	s.Send <- Event{Op: 1}
 }
 
-func (s *Session) StartHeartbeat() {
+func (s *Session) StartHeartbeat(ctx context.Context) {
 	t := time.NewTicker(time.Duration(s.Interval) * time.Millisecond)
 	go func() {
 		for {
@@ -86,13 +85,13 @@ func (s *Session) StartHeartbeat() {
 			case <-t.C:
 				if !s.lastAckReceive {
 					log.Println("ack is dead.")
-					s.Stop <- struct{}{}
-					panic(true)
+					return
 				}
 				s.lastAckReceive = false
 				log.Printf("heartbeat duration: %d", time.Duration(s.Interval))
 				s.Send <- Event{Op: 1}
-			case <-s.Stop:
+			case <-ctx.Done():
+				t.Stop()
 				return
 			}
 		}

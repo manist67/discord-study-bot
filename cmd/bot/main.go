@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
 	bot "study-bot/internal/bot"
 	"study-bot/internal/repository"
 	"study-bot/internal/web"
+	"syscall"
 
 	"github.com/joho/godotenv"
 )
@@ -22,9 +25,11 @@ func main() {
 	web := web.NewWeb(conn)
 	bot := bot.NewBot(conn)
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	go func() {
-		web.Run()
+		web.Run(ctx)
 	}()
 
-	bot.Run()
+	bot.Run(ctx)
 }

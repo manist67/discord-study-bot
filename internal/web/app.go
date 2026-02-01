@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"study-bot/internal/repository"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,6 @@ func NewWeb(conn *repository.Conn) *App {
 	return &app
 }
 
-func (a *App) Run() {
+func (a *App) Run(ctx context.Context) {
 	a.router.Run()
 }
