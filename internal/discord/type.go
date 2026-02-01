@@ -63,3 +63,21 @@ type Application struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type InteractionDataOption struct {
+	Value string `json:"value"`
+	Name  string `json:"name"`
+	Type  int    `json:"type"`
+}
+type InteractionData struct {
+	Id      string                  `json:"id"`
+	Name    string                  `json:"name"`
+	GuildId *string                 `json:"guild_id"`
+	Options []InteractionDataOption `json:"options"`
+}
+
+type InteractionPayload struct {
+	Id    string          `json:"id"`
+	Token string          `json:"token"`
+	Data  InteractionData `json:"data"`
+}

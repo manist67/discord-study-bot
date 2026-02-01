@@ -10,16 +10,28 @@ import (
 	"os"
 )
 
+type GuildCommandOptionType int
+
+const (
+	Mentionable GuildCommandOptionType = 9
+)
+
 type GuildCommandOption struct {
-	Type                     int     `json:"type"`
-	Name                     string  `json:"name"`
-	Description              *string `json:"description"`
-	DescriptionLocalizations *string `json:"description_localizations"`
+	Type                     GuildCommandOptionType `json:"type"`
+	Name                     string                 `json:"name"`
+	Description              *string                `json:"description"`
+	DescriptionLocalizations *string                `json:"description_localizations"`
 }
+
+type CommandType int
+
+const (
+	ChatInput CommandType = 1
+)
 
 type MakeGuildCommandBody struct {
 	Name        string               `json:"name"`
-	Type        int                  `json:"type"`
+	Type        CommandType          `json:"type"`
 	Description string               `json:"description"`
 	Options     []GuildCommandOption `json:"options"`
 }
@@ -74,4 +86,53 @@ func MakeGuildCommand(applicationId string, guildId string, body MakeGuildComman
 	}
 
 	return command, nil
+}
+
+type InteractionCallbackData struct {
+	Content string `json:"content"`
+}
+
+type InteractionCallbackType int
+
+const (
+	ChannelMessageWithSource InteractionCallbackType = 4
+)
+
+type InteractionCallbackForm struct {
+	Type InteractionCallbackType `json:"type"`
+	Data InteractionCallbackData `json:"data"`
+}
+
+func InteractionCallback(interactionId string, interactionToken string, body InteractionCallbackForm) error {
+	url := fmt.Sprintf("https://discord.com/api/v10/interactions/%s/%s/callback", interactionId, interactionToken)
+	payload, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	reqs, err := http.NewRequest("POST", url, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	reqs.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqs)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	log.Printf("Command Created : %s %v", url, body)
+	resBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Fail to response interaction %v %v", string(resBody), body)
+	}
+	return nil
 }

@@ -138,5 +138,27 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 }
 
 func (b *Bot) handleInteraction(p json.RawMessage) {
+	var payload discord.InteractionPayload
+	if err := json.Unmarshal(p, &payload); err != nil {
+		log.Printf("Fail to unmarshal payload %v %s", err, string(p))
+		return
+	}
+	switch payload.Data.Name {
+	case "info":
+		b.handleInfoInteraction(payload)
+	}
+}
 
+func (b *Bot) handleInfoInteraction(payload discord.InteractionPayload) {
+	data := payload.Data
+	if data.GuildId == nil {
+		log.Printf("Info command used outside of a guild")
+		return
+	}
+
+	if len(data.Options) > 0 {
+		b.responseMemberInfoLink(payload.Id, payload.Token, *data.GuildId, data.Options[0].Value)
+	} else {
+		b.responseGuildInfoLink(payload.Id, payload.Token, *data.GuildId)
+	}
 }
