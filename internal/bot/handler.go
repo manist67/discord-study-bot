@@ -62,6 +62,13 @@ func (b *Bot) createGuild(p json.RawMessage) {
 		}
 	}
 
+	for _, c := range payload.Channels {
+		if err := b.repo.InsertGuildChannel(guild.GuildId, c.Name, c.Id, c.Type); err != nil {
+			log.Printf("Err b.repo.InsertGuildChannel : %v", err)
+			return
+		}
+	}
+
 	b.registryGuildCommand(guild.GuildId)
 }
 

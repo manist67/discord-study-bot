@@ -1,6 +1,9 @@
 package repository
 
-import "time"
+import (
+	"study-bot/internal/discord"
+	"time"
+)
 
 type MemberForm struct {
 	MemberName string
@@ -13,4 +16,11 @@ type VoiceStateForm struct {
 	MemberId  string
 	SessionId string
 	EnteredAt time.Time
+}
+
+type GuildChannelForm struct {
+	GuildId     string              `db:"guildId"`
+	ChannelId   string              `db:"channelId"`
+	ChannelName string              `db:"channelName"`
+	ChannelType discord.ChannelType `db:"channelType"`
 }

@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"study-bot/internal/discord"
 )
 
 func (c Conn) GetGuild(guildId string) (*Guild, error) {
@@ -26,4 +28,31 @@ func (c Conn) InsertGuild(guildName string, guildId string) error {
 	}
 
 	return nil
+}
+
+func (c Conn) InsertGuildChannel(guildId string, channelName string, channelId string, channelType discord.ChannelType) error {
+	query := `INSERT INTO GuildChannel(channelId, guildId, channelName, channelType) 
+		VALUES (:channelId, :guildId, :channelName, :channelType) 
+		ON DUPLICATE KEY UPDATE channelName = :channelName, channelType = :channelType`
+	if _, err := c.db.NamedExec(query, GuildChannelForm{
+		GuildId:     guildId,
+		ChannelId:   channelId,
+		ChannelName: channelName,
+		ChannelType: channelType,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c Conn) GetGuildChannels(guildId string) ([]GuildChannel, error) {
+	query := `SELECT * FROM GuildChannel where guildId = ?`
+
+	channels := []GuildChannel{}
+	if err := c.db.Select(&channels, query, guildId); err != nil {
+		return []GuildChannel{}, fmt.Errorf("Fail to get GuildChannels %w", err)
+	}
+
+	return channels, nil
 }

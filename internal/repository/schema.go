@@ -7,6 +7,12 @@ type Guild struct {
 	GuildName string
 	GuildId   string
 }
+type GuildChannel struct {
+	Idx         int    `db:"idx"`
+	ChannelName string `db:"channelName"`
+	GuildId     string `db:"guildId"`
+	ChannelId   string `db:"channelId"`
+}
 
 type Member struct {
 	Idx        int
