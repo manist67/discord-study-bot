@@ -83,15 +83,32 @@ func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.Voice
 		return fmt.Errorf("no member")
 	}
 
+	now := time.Now()
 	if err := b.repo.CreateVoiceState(repository.VoiceStateForm{
 		GuildId:   payload.GuildId,
 		ChannelId: *payload.ChannelId,
 		MemberId:  member.MemberId,
 		SessionId: payload.SessionId,
-		EnteredAt: time.Now(),
+		EnteredAt: now,
 	}); err != nil {
 		return fmt.Errorf("Fail to create voice state %w", err)
 	}
+
+	channels, err := b.repo.GetGuildDMChannels(*payload.GuildId)
+	if err != nil {
+		return fmt.Errorf("Fail b.repo.GetGuildDMChannels %w", err)
+	}
+
+	if len(channels) <= 0 {
+		return errors.New("No channel")
+	}
+
+	if err := discord.SendMessage(channels[0].ChannelId, discord.MessageForm{
+		Content: fmt.Sprintf("%s 님 안녕하세요! 입장 시간 : %s", member.MemberName, now.Local().Format("2006-01-02 15:04:05")),
+	}); err != nil {
+		return fmt.Errorf("Fail to send message %w", err)
+	}
+
 	return nil
 }
 
@@ -121,6 +138,24 @@ func (b *Bot) leaveVoiceChannel(state *repository.VoiceState, member *repository
 			return err
 		}
 		startAt = nextDay
+	}
+
+	channels, err := b.repo.GetGuildDMChannels(state.GuildId)
+	if err != nil {
+		return fmt.Errorf("Fail b.repo.GetGuildDMChannels %w", err)
+	}
+
+	if len(channels) <= 0 {
+		return errors.New("No channel")
+	}
+
+	if err := discord.SendMessage(channels[0].ChannelId, discord.MessageForm{
+		Content: fmt.Sprintf("%s 님 조심히 들어가세요! 활동 시간 : %s ~ %s",
+			member.MemberName,
+			state.EnteredAt.Local().Format("2006-01-02 15:04:05"),
+			leaveDate.Local().Format("2006-01-02 15:04:05")),
+	}); err != nil {
+		return fmt.Errorf("Fail to send message %w", err)
 	}
 
 	return nil

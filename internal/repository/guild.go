@@ -46,8 +46,8 @@ func (c Conn) InsertGuildChannel(guildId string, channelName string, channelId s
 	return nil
 }
 
-func (c Conn) GetGuildChannels(guildId string) ([]GuildChannel, error) {
-	query := `SELECT * FROM GuildChannel where guildId = ?`
+func (c Conn) GetGuildDMChannels(guildId string) ([]GuildChannel, error) {
+	query := `SELECT * FROM GuildChannel where guildId = ? and channelType = 0`
 
 	channels := []GuildChannel{}
 	if err := c.db.Select(&channels, query, guildId); err != nil {

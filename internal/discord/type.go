@@ -153,3 +153,7 @@ type InteractionCallbackForm struct {
 	Type InteractionCallbackType `json:"type"`
 	Data InteractionCallbackData `json:"data"`
 }
+
+type MessageForm struct {
+	Content string `json:"content"`
+}

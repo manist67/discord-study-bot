@@ -82,3 +82,40 @@ func InteractionCallback(interactionId string, interactionToken string, body Int
 	}
 	return nil
 }
+
+func SendMessage(channelId string, form MessageForm) error {
+	url := fmt.Sprintf("https://discord.com/api/v10/channels/%s/messages", channelId)
+	payload, err := json.Marshal(form)
+	if err != nil {
+		return err
+	}
+
+	reqs, err := http.NewRequest("POST", url, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	token := fmt.Sprintf("Bot %s", os.Getenv("DISCORD_BOT_TOKEN"))
+	reqs.Header.Add("Authorization", token)
+	reqs.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqs)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	log.Printf("Message Created : %s %v", url, form)
+	resBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Fail to response interaction %v", string(resBody))
+	}
+	return nil
+
+}

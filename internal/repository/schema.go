@@ -1,6 +1,9 @@
 package repository
 
-import "time"
+import (
+	"study-bot/internal/discord"
+	"time"
+)
 
 type Guild struct {
 	Idx       int
@@ -8,10 +11,11 @@ type Guild struct {
 	GuildId   string
 }
 type GuildChannel struct {
-	Idx         int    `db:"idx"`
-	ChannelName string `db:"channelName"`
-	GuildId     string `db:"guildId"`
-	ChannelId   string `db:"channelId"`
+	Idx         int                 `db:"idx"`
+	ChannelName string              `db:"channelName"`
+	GuildId     string              `db:"guildId"`
+	ChannelId   string              `db:"channelId"`
+	ChannelType discord.ChannelType `db:"channelType"`
 }
 
 type Member struct {
