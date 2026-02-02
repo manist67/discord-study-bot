@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"study-bot/internal/discord"
-	"study-bot/internal/repository"
-	"time"
 )
 
 type DiscordHandler interface {
@@ -83,6 +81,7 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 		return
 	}
 
+	// 맴버가 없을 경우 맴버 삽입
 	if member == nil {
 		m, err := b.repo.InsertMember(user.Username, user.Id)
 		if err != nil || m == nil {
@@ -100,30 +99,27 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 		return
 	}
 
+	// 서버가 켜지기 전 체널에 이미 들어간 경우
+	// 일반적으로는 오류임
 	if state == nil && payload.ChannelId == nil {
 		log.Printf("Unregistered session. aborted")
 		return
 	}
 
-	if state == nil && payload.ChannelId != nil {
-		b.repo.CreateVoiceState(repository.VoiceStateForm{
-			GuildId:   payload.GuildId,
-			ChannelId: *payload.ChannelId,
-			MemberId:  member.MemberId,
-			SessionId: payload.SessionId,
-			EnteredAt: time.Now(),
-		})
+	if payload.ChannelId != nil { // 서버에 입장 경우
+		if b.enterVoiceChannel(member, payload) != nil {
+			log.Printf("Fail to create session. sessionId: %s memberId: %s", payload.SessionId, member.MemberId)
+			log.Printf("%v", err)
+		}
+	} else if state != nil && payload.ChannelId == nil { // 서버에 퇴장한 경우
+		if err := b.leaveVoiceChannel(state, member); err != nil {
+			log.Printf("Fail to update session. sessionId: %s memberId: %s", payload.SessionId, member.MemberId)
+			log.Printf("%v", err)
+		}
+	} else { // 오류 상황
 		log.Printf("Unregistered session. aborted")
 		return
-	}
 
-	if payload.ChannelId == nil {
-		n := time.Now()
-		if b.repo.UpdateVoiceState(state.Idx, n) != nil {
-			log.Printf("Fail to update session. sessionId: %s memberId: %s time: %v", payload.SessionId, member.MemberId, n)
-			log.Printf("%v", err)
-			return
-		}
 	}
 }
 

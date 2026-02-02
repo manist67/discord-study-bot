@@ -1,10 +1,13 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"study-bot/internal/discord"
+	"study-bot/internal/repository"
+	"time"
 )
 
 func (b *Bot) registryGuildCommand(guildId string) {
@@ -73,4 +76,52 @@ func (b *Bot) responseMemberInfoLink(interactionId string, token string, guildId
 	}); err != nil {
 		log.Printf("Fail to create Command : %s %s %s %v", interactionId, guildId, memberId, err)
 	}
+}
+
+func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.VoiceStatePayload) error {
+	if member == nil {
+		return fmt.Errorf("no member")
+	}
+
+	if err := b.repo.CreateVoiceState(repository.VoiceStateForm{
+		GuildId:   payload.GuildId,
+		ChannelId: *payload.ChannelId,
+		MemberId:  member.MemberId,
+		SessionId: payload.SessionId,
+		EnteredAt: time.Now(),
+	}); err != nil {
+		return fmt.Errorf("Fail to create voice state %w", err)
+	}
+	return nil
+}
+
+func (b *Bot) leaveVoiceChannel(state *repository.VoiceState, member *repository.Member) error {
+	if state == nil {
+		return errors.New("no state")
+	}
+	if member == nil {
+		return errors.New("no member")
+	}
+
+	leaveDate := time.Now()
+	if err := b.repo.UpdateVoiceState(state.Idx, leaveDate); err != nil {
+		return fmt.Errorf("Fail to update voice state %w", err)
+	}
+
+	startAt := state.EnteredAt
+	for {
+		nextDay := time.Date(startAt.Year(), startAt.Month(), startAt.Day()+1, 0, 0, 0, 0, startAt.Location())
+		if nextDay.After(leaveDate) {
+			if err := b.repo.UpsertParticipating(state.GuildId, member.MemberId, startAt, leaveDate); err != nil {
+				return err
+			}
+			break
+		}
+		if err := b.repo.UpsertParticipating(state.GuildId, member.MemberId, startAt, nextDay); err != nil {
+			return err
+		}
+		startAt = nextDay
+	}
+
+	return nil
 }

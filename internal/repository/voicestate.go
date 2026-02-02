@@ -12,7 +12,7 @@ func (c Conn) GetCurrentVoiceStatus(memberId string) (*VoiceState, error) {
 
 	var s VoiceState
 	row := c.db.QueryRow(query, memberId)
-	if err := row.Scan(&s.Idx, &s.GuildId, &s.SessionId, &s.ChannelId, &s.MemberId, &s.enteredAt, &s.leavedAt); err != nil {
+	if err := row.Scan(&s.Idx, &s.GuildId, &s.SessionId, &s.ChannelId, &s.MemberId, &s.EnteredAt, &s.LeavedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}

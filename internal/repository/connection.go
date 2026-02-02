@@ -1,17 +1,16 @@
 package repository
 
 import (
-	"database/sql"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
 
 type Conn struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 func Open(url string) *Conn {
-	db, err := sql.Open("mysql", url)
+	db, err := sqlx.Connect("mysql", url)
 	if err != nil {
 		panic(err)
 	}
