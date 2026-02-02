@@ -113,7 +113,7 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 		return
 	}
 
-	if payload.ChannelId != nil { // 서버에 입장 경우
+	if state == nil && payload.ChannelId != nil { // 서버에 입장 경우
 		if err := b.enterVoiceChannel(member, payload); err != nil {
 			log.Printf("Fail to create session. sessionId: %s memberId: %s", payload.SessionId, member.MemberId)
 			log.Printf("%v", err)
