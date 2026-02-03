@@ -21,6 +21,8 @@ func NewBot(r *repository.Conn) *Bot {
 }
 
 func (b *Bot) Run(ctx context.Context) {
+	defer b.repo.Close()
+
 	restartTime := 2 * time.Second
 	for {
 		select {
@@ -37,8 +39,8 @@ func (b *Bot) Run(ctx context.Context) {
 			case <-time.After(restartTime):
 				log.Println("Restart discord bot")
 				restartTime *= 2
-				if restartTime > 30 {
-					log.Printf("Shutdown...")
+				if restartTime > 30*time.Second {
+					log.Printf("Max retry interval reched. Shutting down...")
 					return
 				}
 			}
