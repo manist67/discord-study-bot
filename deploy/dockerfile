@@ -1,11 +1,11 @@
-FROM golang:1.25.6-alpine as build
+FROM golang:1.25.6-alpine AS build
 
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download                   
 
-COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /main main.go
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /main ./cmd/bot/main.go
 
 FROM alpine:3.20 AS run
 
