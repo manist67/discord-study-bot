@@ -8,7 +8,7 @@ on:
 
 env:
   IMAGE_NAME: discord-bot
-  REGISTRY_URL: docker-hub.minsung.me
+  REGISTRY_URL: docker-registry.minsung.me
 
 jobs:
   build:
@@ -27,7 +27,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: docker-registry.minsung.me
+          registry: ${{ env.REGISTRY_URL }}
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
