@@ -24,3 +24,8 @@ type GuildChannelForm struct {
 	ChannelName string              `db:"channelName"`
 	ChannelType discord.ChannelType `db:"channelType"`
 }
+
+type GuildForm struct {
+	GuildId   string `db:"guildId"`
+	GuildName string `db:"guildName"`
+}

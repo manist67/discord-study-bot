@@ -21,13 +21,29 @@ func (c Conn) GetGuild(guildId string) (*Guild, error) {
 	return &guild, nil
 }
 
-func (c Conn) InsertGuild(guildName string, guildId string) error {
-	query := "INSERT INTO Guild(guildName, guildId) VALUES (?,?)"
-	if _, err := c.db.Exec(query, guildName, guildId); err != nil {
-		return err
+func (c Conn) InsertGuild(guildName string, guildId string) (*Guild, error) {
+	query := `INSERT INTO Guild(guildName, guildId) VALUES (:guildName, :guildId)
+	ON DUPLICATE KEY UPDATE 
+		idx = LAST_INSERT_ID(idx), 
+		guildName = :guildName`
+	res, err := c.db.NamedExec(query, GuildForm{
+		GuildName: guildName,
+		GuildId:   guildId,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	idx, err := res.LastInsertId()
+	if err != nil || idx == 0 {
+		return nil, err
+	}
+
+	return &Guild{
+		Idx:       int(idx),
+		GuildName: guildName,
+		GuildId:   guildId,
+	}, nil
 }
 
 func (c Conn) InsertGuildChannel(guildId string, channelName string, channelId string, channelType discord.ChannelType) error {

@@ -56,13 +56,17 @@ func (b *Bot) createGuild(p json.RawMessage) {
 		return
 	}
 	if guild == nil {
-		if err := b.repo.InsertGuild(payload.Name, payload.Id); err != nil {
+		g, err := b.repo.InsertGuild(payload.Name, payload.Id)
+		if err != nil {
 			log.Printf("Err b.repo.InsertGuild : %v", err)
 			return
 		}
+
+		guild = g
 	}
 
 	for _, c := range payload.Channels {
+		log.Printf(">>> %v", guild)
 		if err := b.repo.InsertGuildChannel(guild.GuildId, c.Name, c.Id, c.Type); err != nil {
 			log.Printf("Err b.repo.InsertGuildChannel : %v", err)
 			return
