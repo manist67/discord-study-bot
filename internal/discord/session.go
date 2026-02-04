@@ -74,7 +74,13 @@ func (s *Session) Open(ctx context.Context, handler func(Event)) {
 				continue
 			}
 
-			log.Printf("recv: %d %v %v", event.Op, *event.T, *event.D)
+			log.Printf("recv: %d", event.Op)
+			if event.T != nil {
+				log.Printf("event.T: %v", *event.T)
+			}
+			if event.D != nil {
+				log.Printf("event.D: %v", *event.D)
+			}
 
 			switch event.Op {
 			case 1:
