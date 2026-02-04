@@ -16,6 +16,7 @@ type GuildChannel struct {
 	GuildId     string              `db:"guildId"`
 	ChannelId   string              `db:"channelId"`
 	ChannelType discord.ChannelType `db:"channelType"`
+	IsMain      bool                `db:"isMain"`
 }
 
 type Member struct {

@@ -29,3 +29,9 @@ type GuildForm struct {
 	GuildId   string `db:"guildId"`
 	GuildName string `db:"guildName"`
 }
+
+type GuildMemberForm struct {
+	GuildId  string `db:"guildId"`
+	MemberId string `db:"memberId"`
+	Nickname string `db:"nickname"`
+}

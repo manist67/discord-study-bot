@@ -102,6 +102,22 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 		member = m
 	}
 
+	var displayName string
+	if payload.Member.Nick != nil {
+		displayName = *payload.Member.Nick
+	} else if payload.Member.User.DisplayName != nil {
+		displayName = *payload.Member.User.DisplayName
+	} else {
+		displayName = payload.Member.User.Username
+	}
+
+	if payload.GuildId != nil {
+		if err := b.repo.InsertGuildMember(*payload.GuildId, member.MemberId, displayName); err != nil {
+			log.Printf("Err b.repo.InsertGuildMember: %v", err)
+			return
+		}
+	}
+
 	state, err := b.repo.GetCurrentVoiceStatus(member.MemberId)
 	log.Printf("state %s %s", payload.SessionId, member.MemberId)
 	if err != nil {
@@ -118,12 +134,12 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 	}
 
 	if state == nil && payload.ChannelId != nil { // 서버에 입장 경우
-		if err := b.enterVoiceChannel(member, payload); err != nil {
+		if err := b.enterVoiceChannel(member, payload, displayName); err != nil {
 			log.Printf("Fail to create session. sessionId: %s memberId: %s", payload.SessionId, member.MemberId)
 			log.Printf("%v", err)
 		}
 	} else if state != nil && payload.ChannelId == nil { // 서버에 퇴장한 경우
-		if err := b.leaveVoiceChannel(state, member); err != nil {
+		if err := b.leaveVoiceChannel(state, member, displayName); err != nil {
 			log.Printf("Fail to update session. sessionId: %s memberId: %s", payload.SessionId, member.MemberId)
 			log.Printf("%v", err)
 		}

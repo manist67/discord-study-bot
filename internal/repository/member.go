@@ -58,6 +58,22 @@ func (c Conn) GetMembersByIds(memberIds []string) ([]Member, error) {
 	return members, nil
 }
 
+func (c Conn) InsertGuildMember(guildId string, memberId string, nickname string) error {
+	query := `INSERT INTO GuildMember(guildId, memberId, nickname) 
+		VALUES (:guildId, :memberId, :nickname)
+		ON DUPLICATE KEY UPDATE nickname = :nickname`
+
+	if _, err := c.db.NamedExec(query, GuildMemberForm{
+		Nickname: nickname,
+		GuildId:  guildId,
+		MemberId: memberId,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c Conn) InsertMember(memberName string, memberId string) (*Member, error) {
 	query := "INSERT INTO Member(memberName, memberId) VALUES (?, ?)"
 	res, err := c.db.Exec(query, memberName, memberId)

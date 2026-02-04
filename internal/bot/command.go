@@ -78,7 +78,7 @@ func (b *Bot) responseMemberInfoLink(interactionId string, token string, guildId
 	}
 }
 
-func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.VoiceStatePayload) error {
+func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.VoiceStatePayload, displayName string) error {
 	if member == nil {
 		return fmt.Errorf("no member")
 	}
@@ -105,7 +105,7 @@ func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.Voice
 
 	if err := discord.SendMessage(channels[0].ChannelId, discord.MessageForm{
 		Content: fmt.Sprintf("%s 입장 시간 : %s",
-			member.MemberName,
+			displayName,
 			now.Local().Format("2006-01-02 15:04:05")),
 	}); err != nil {
 		return fmt.Errorf("Fail to send message %w", err)
@@ -114,7 +114,7 @@ func (b *Bot) enterVoiceChannel(member *repository.Member, payload discord.Voice
 	return nil
 }
 
-func (b *Bot) leaveVoiceChannel(state *repository.VoiceState, member *repository.Member) error {
+func (b *Bot) leaveVoiceChannel(state *repository.VoiceState, member *repository.Member, displayName string) error {
 	if state == nil {
 		return errors.New("no state")
 	}
@@ -153,7 +153,7 @@ func (b *Bot) leaveVoiceChannel(state *repository.VoiceState, member *repository
 
 	if err := discord.SendMessage(channels[0].ChannelId, discord.MessageForm{
 		Content: fmt.Sprintf("%s 퇴장 시간 : %s",
-			member.MemberName,
+			displayName,
 			leaveDate.Local().Format("2006-01-02 15:04:05")),
 	}); err != nil {
 		return fmt.Errorf("Fail to send message %w", err)

@@ -24,12 +24,14 @@ type IdentifyPayload struct {
 }
 
 type User struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
+	Id          string  `json:"id"`
+	Username    string  `json:"username"`
+	DisplayName *string `json:"display_name"`
 }
 
 type GuildMember struct {
-	User User `json:"user"`
+	User User    `json:"user"`
+	Nick *string `json:"nick"`
 }
 
 type ChannelType int
