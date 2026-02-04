@@ -74,11 +74,11 @@ func (s *Session) Open(ctx context.Context, handler func(Event)) {
 				continue
 			}
 
-			if event.T != nil {
-				log.Printf("recv: %d %s", event.Op, *event.T)
-			}
+			log.Printf("recv: %d %v %v", event.Op, *event.T, *event.D)
 
 			switch event.Op {
+			case 1:
+				s.SendHeartbeat()
 			case 10:
 				s.Handshake(innerCtx, event)
 			case 11:
@@ -139,6 +139,10 @@ func (s *Session) Handshake(ctx context.Context, event Event) {
 		D:  &raw,
 	}
 
+	s.Send <- Event{Op: 1}
+}
+
+func (s *Session) SendHeartbeat() {
 	s.Send <- Event{Op: 1}
 }
 
