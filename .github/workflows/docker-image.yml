@@ -1,0 +1,24 @@
+name: Build Discord Bot
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+env:
+  tag_name: $(date +%s)
+  docker_registry: docker-hub.minsung.me
+  image_name: disord-bot
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - 
+      name: Build the Docker image
+      run: docker build -f ./deploy/dockerfile -t $docker_registry/$image_name:$tag_name .
+    - 
+      name: Push the Docker image
+      run: docker push $docker_registry/$image_name:$tag_name
