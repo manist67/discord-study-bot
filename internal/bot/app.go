@@ -21,8 +21,6 @@ func NewBot(r *repository.Conn) *Bot {
 }
 
 func (b *Bot) Run(ctx context.Context) {
-	defer b.repo.Close()
-
 	restartTime := 2 * time.Second
 	for {
 		select {
