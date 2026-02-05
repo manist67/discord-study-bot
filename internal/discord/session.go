@@ -3,6 +3,7 @@ package discord
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -17,7 +18,23 @@ type Session struct {
 	Interval       int
 	Send           chan Event
 	lastAckReceive bool
+	seq            *int
 	mu             sync.Mutex
+}
+
+func (s *Session) setSeq(seq int) {
+	defer s.mu.Unlock()
+	s.mu.Lock()
+
+	fmt.Printf(">>> %v", seq)
+	s.seq = &seq
+}
+
+func (s *Session) getSeq() *int {
+	defer s.mu.Unlock()
+	s.mu.Lock()
+
+	return s.seq
 }
 
 func (s *Session) setAck(v bool) {
@@ -84,6 +101,9 @@ func (s *Session) Open(ctx context.Context, handler func(Event)) {
 			case 11:
 				s.NotifyAck()
 			case 0:
+				if event.S != nil {
+					s.setSeq(*event.S)
+				}
 				handler(event)
 			}
 		}
@@ -137,13 +157,17 @@ func (s *Session) Handshake(ctx context.Context, event Event) {
 	s.Send <- Event{
 		Op: 2,
 		D:  &raw,
+		S:  s.seq,
 	}
 
-	s.Send <- Event{Op: 1}
+	s.SendHeartbeat()
 }
 
 func (s *Session) SendHeartbeat() {
-	s.Send <- Event{Op: 1}
+	s.Send <- Event{
+		Op: 1,
+		S:  s.seq,
+	}
 }
 
 func (s *Session) StartHeartbeat(ctx context.Context) {
