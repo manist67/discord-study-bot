@@ -28,7 +28,7 @@ func (b *Bot) Run(ctx context.Context) {
 			log.Println("Context cancelled, stopping bot...")
 			return
 		default:
-			b.session.Open(ctx, b.OnEvent)
+			b.session.Open(ctx, b)
 
 			select {
 			case <-ctx.Done():

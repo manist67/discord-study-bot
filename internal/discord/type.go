@@ -23,6 +23,12 @@ type IdentifyPayload struct {
 	} `json:"properties"`
 }
 
+type ResumePayload struct {
+	Token     string `json:"token"`
+	SessionId string `json:"session_id"`
+	Seq       int    `json:"seq"`
+}
+
 type User struct {
 	Id          string  `json:"id"`
 	Username    string  `json:"username"`
@@ -59,8 +65,10 @@ type Channel struct {
 }
 
 type ReadyPayload struct {
-	V    int  `json:"v"`
-	User User `json:"user"`
+	V                int    `json:"v"`
+	User             User   `json:"user"`
+	SessionId        string `json:"session_id"`
+	ResumeGatewayUrl string `json:"resume_gateway_url"`
 }
 
 type GuildCreatePayload struct {

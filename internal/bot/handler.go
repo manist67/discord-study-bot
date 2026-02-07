@@ -37,8 +37,6 @@ func (b *Bot) ready(p json.RawMessage) {
 	}
 
 	b.applicationId = payload.User.Id
-	// slash commend 등록
-
 }
 
 func (b *Bot) createGuild(p json.RawMessage) {
@@ -48,7 +46,7 @@ func (b *Bot) createGuild(p json.RawMessage) {
 		return
 	}
 
-	log.Printf("init %d %v", payload.MemberCount, payload)
+	log.Printf("init %s", payload.Name)
 
 	guild, err := b.repo.GetGuild(payload.Id)
 	if err != nil {
@@ -66,7 +64,6 @@ func (b *Bot) createGuild(p json.RawMessage) {
 	}
 
 	for _, c := range payload.Channels {
-		log.Printf(">>> %v", guild)
 		if err := b.repo.InsertGuildChannel(guild.GuildId, c.Name, c.Id, c.Type); err != nil {
 			log.Printf("Err b.repo.InsertGuildChannel : %v", err)
 			return

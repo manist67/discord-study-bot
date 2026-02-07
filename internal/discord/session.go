@@ -3,36 +3,61 @@ package discord
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
+type Handler interface {
+	OnEvent(Event)
+}
 type Session struct {
+	Conn    *websocket.Conn
+	Handler Handler
+
 	Interval       int
-	Send           chan Event
+	EventChannel   chan Event
+	ClosedChannel  chan struct{}
 	lastAckReceive bool
-	seq            *int
 	mu             sync.Mutex
+
+	isReconnect   bool
+	seq           int
+	connectionURL string
+	sessionId     string
+}
+
+func (s *Session) setResumeValue(resultURL string, sessionId string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	decodeString, err := url.QueryUnescape(resultURL)
+	if err != nil {
+		log.Fatalf("Fail to decode string %s", decodeString)
+		return
+	}
+
+	s.isReconnect = true
+	s.connectionURL = strings.Replace(decodeString, "wss://", "", 0)
+	s.sessionId = sessionId
 }
 
 func (s *Session) setSeq(seq int) {
-	defer s.mu.Unlock()
 	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	fmt.Printf(">>> %v", seq)
-	s.seq = &seq
+	s.seq = seq
 }
 
-func (s *Session) getSeq() *int {
-	defer s.mu.Unlock()
+func (s *Session) getSeq() int {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	return s.seq
 }
@@ -40,101 +65,82 @@ func (s *Session) getSeq() *int {
 func (s *Session) setAck(v bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	s.lastAckReceive = v
 }
 
 func (s *Session) getAck() bool {
-	defer s.mu.Unlock()
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	return s.lastAckReceive
 }
 
 func NewSession() *Session {
 	session := Session{
 		Interval:       -1,
-		Send:           make(chan Event, 10),
+		EventChannel:   make(chan Event, 10),
+		ClosedChannel:  make(chan struct{}),
 		lastAckReceive: false,
+
+		// isReconnect:   true,
+		// connectionURL: "gateway-us-east1-d.discord.gg",
+		// seq:           5,
+		// sessionId:     "278ad825418529133053e38fbf2d78db",
 	}
 
 	return &session
 }
 
-func (s *Session) Open(ctx context.Context, handler func(Event)) {
+func (s *Session) Open(ctx context.Context, handler Handler) {
+	s.Handler = handler
 	innerCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
-	log.Printf("Open Discord Gateway...")
-	u := url.URL{
-		Scheme:   "wss",
-		Host:     "gateway.discord.gg",
-		RawQuery: "v=10&encoding=json",
-	}
-	log.Printf("connecting to %s", u.String())
-
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		log.Fatal("dial : ", err)
-	}
-	defer conn.Close()
-
-	// 메세지 읽기
-	go func() {
-		for {
-			_, message, err := conn.ReadMessage()
-			if err != nil {
-				log.Println("Read:", err)
-				return
+	for {
+		var u url.URL
+		if !s.isReconnect {
+			log.Printf("Open Discord Gateway...")
+			u = url.URL{
+				Scheme:   "wss",
+				Host:     "gateway.discord.gg",
+				RawQuery: "v=10&encoding=json",
 			}
-			var event Event
-			if err := json.Unmarshal(message, &event); err != nil {
-				log.Printf("unmarshal error: %v", err)
-				continue
-			}
-
-			log.Printf("recv: %d", event.Op)
-
-			switch event.Op {
-			case 1:
-				s.SendHeartbeat()
-			case 10:
-				s.Handshake(innerCtx, event)
-			case 11:
-				s.NotifyAck()
-			case 0:
-				if event.S != nil {
-					s.setSeq(*event.S)
-				}
-				handler(event)
+		} else {
+			log.Printf("Reconnect Discord Gateway...")
+			u = url.URL{
+				Scheme:   "wss",
+				Host:     s.connectionURL,
+				RawQuery: "v=10&encoding=json",
 			}
 		}
-	}()
+		log.Printf("connecting to %s", u.String())
 
-	// 메세지 쓰기
-	for {
+		conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+		s.Conn = conn
+		if err != nil {
+			log.Fatal("dial : ", err)
+		}
+
+		// 메세지 읽기
+		go s.Read(innerCtx)
+
+		// 메세지 쓰기
+		go s.Send(innerCtx)
+
 		select {
+		case <-s.ClosedChannel:
+			s.Conn.Close()
+			continue
 		case <-innerCtx.Done():
+			log.Printf("%s %s %d", s.connectionURL, s.sessionId, s.seq)
+			s.Conn.Close()
+			cancel()
 			return
-		case message := <-s.Send:
-			log.Printf("send: %d", message.Op)
-			if err := conn.WriteJSON(message); err != nil {
-				log.Printf("unmarshal error: %v", err)
-				return
-			}
 		}
 	}
 }
 
-func (s *Session) Handshake(ctx context.Context, event Event) {
-	var handshakeEvent HandshakePayload
-	if err := json.Unmarshal(*event.D, &handshakeEvent); err != nil {
-		log.Printf("Handshake marshal error %v", err)
-		return
-	}
-
-	log.Printf("Start heartbeat interval %d\n", handshakeEvent.HeartbeatInterval)
-	s.Interval = handshakeEvent.HeartbeatInterval
-	s.StartHeartbeat(ctx)
-
+func (s *Session) Handshake() {
 	identifyPayload, err := json.Marshal(IdentifyPayload{
 		Token: os.Getenv("DISCORD_BOT_TOKEN"),
 		Properties: struct {
@@ -154,23 +160,57 @@ func (s *Session) Handshake(ctx context.Context, event Event) {
 	}
 
 	raw := json.RawMessage(identifyPayload)
-	s.Send <- Event{
+	s.EventChannel <- Event{
 		Op: 2,
 		D:  &raw,
-		S:  s.seq,
+		S:  &s.seq,
+	}
+}
+
+func (s *Session) Reconnect() {
+	resumePayload, err := json.Marshal(ResumePayload{
+		Token:     os.Getenv("DISCORD_BOT_TOKEN"),
+		SessionId: s.sessionId,
+		Seq:       s.seq,
+	})
+	if err != nil {
+		log.Fatal("Fail to Reconnect : ", err)
+	}
+	d := json.RawMessage(resumePayload)
+	s.EventChannel <- Event{
+		Op: 6,
+		S:  &s.seq,
+		D:  &d,
+	}
+}
+
+func (s *Session) SetResume(p json.RawMessage) {
+	var payload ReadyPayload
+	if err := json.Unmarshal(p, &payload); err != nil {
+		log.Printf("Fail to unmarshal payload %s", string(p))
+		return
 	}
 
-	s.SendHeartbeat()
+	s.setResumeValue(payload.ResumeGatewayUrl, payload.SessionId)
 }
 
 func (s *Session) SendHeartbeat() {
-	s.Send <- Event{
+	s.EventChannel <- Event{
 		Op: 1,
-		S:  s.seq,
+		S:  &s.seq,
 	}
 }
 
-func (s *Session) StartHeartbeat(ctx context.Context) {
+func (s *Session) StartHeartbeat(ctx context.Context, event Event) {
+	var handshakeEvent HandshakePayload
+	if err := json.Unmarshal(*event.D, &handshakeEvent); err != nil {
+		log.Printf("Handshake marshal error %v", err)
+		return
+	}
+
+	log.Printf("Start heartbeat interval %d\n", handshakeEvent.HeartbeatInterval)
+	s.Interval = handshakeEvent.HeartbeatInterval
+
 	t := time.NewTicker(time.Duration(s.Interval) * time.Millisecond)
 	go func() {
 		for {
@@ -182,7 +222,7 @@ func (s *Session) StartHeartbeat(ctx context.Context) {
 				}
 				s.lastAckReceive = false
 				log.Printf("heartbeat duration: %d", time.Duration(s.Interval))
-				s.Send <- Event{Op: 1}
+				s.SendHeartbeat()
 			case <-ctx.Done():
 				t.Stop()
 				return

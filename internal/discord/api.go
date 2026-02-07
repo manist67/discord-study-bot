@@ -34,7 +34,6 @@ func MakeGuildCommand(applicationId string, guildId string, body MakeGuildComman
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Command Created : %s %v", url, body)
 	resBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
@@ -70,7 +69,6 @@ func InteractionCallback(interactionId string, interactionToken string, body Int
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Command Created : %s %v", url, body)
 	resBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
