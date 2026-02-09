@@ -64,9 +64,10 @@ const (
 )
 
 type Channel struct {
-	Id   string      `json:"id"`
-	Type ChannelType `json:"type"`
-	Name string      `json:"name"`
+	Id      string      `json:"id"`
+	Type    ChannelType `json:"type"`
+	Name    string      `json:"name"`
+	GuildId *string     `json:"guild_id"`
 }
 
 type ReadyPayload struct {

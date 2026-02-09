@@ -27,7 +27,7 @@ func (b *Bot) OnEvent(event discord.Event) {
 	case "CHANNEL_CREATE":
 		b.handleCreateChannel(*event.D)
 	case "CHANNEL_DELETE":
-		b.handleCreateChannel(*event.D)
+		b.handleDeleteChannel(*event.D)
 	default:
 		log.Printf("Unhandled event type: %s", *event.T)
 	}
@@ -152,9 +152,34 @@ func (b *Bot) watchVoiceState(p json.RawMessage) {
 }
 
 func (b *Bot) handleCreateChannel(p json.RawMessage) {
+	var channel discord.Channel
+	if err := json.Unmarshal(p, &channel); err != nil {
+		log.Printf("Fail to unmarshal payload %s", string(p))
+		return
+	}
 
+	if channel.GuildId == nil {
+		log.Printf("fail to create channel : No Guild Id : %s", channel.Name)
+		return
+	}
+
+	if err := b.repo.InsertGuildChannel(*channel.GuildId, channel.Name, channel.Id, channel.Type); err != nil {
+		log.Printf("fail to create channel : db error : %s", channel.Name)
+		return
+	}
+	log.Printf("Success to Create Chennel : %s", channel.Name)
 }
 
 func (b *Bot) handleDeleteChannel(p json.RawMessage) {
+	var channel discord.Channel
+	if err := json.Unmarshal(p, &channel); err != nil {
+		log.Printf("Fail to unmarshal payload %s", string(p))
+		return
+	}
 
+	if err := b.repo.DeleteGuildChannel(channel.Id); err != nil {
+		log.Printf("fail to delete channel : db error : %s", channel.Name)
+		return
+	}
+	log.Printf("Success to delete Chennel : %s", channel.Name)
 }

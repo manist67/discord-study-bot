@@ -103,3 +103,11 @@ func (c Conn) GetGuildDMChannels(guildId string) ([]GuildChannel, error) {
 
 	return channels, nil
 }
+
+func (c Conn) DeleteGuildChannel(channelId string) error {
+	query := `DELETE FROM GuildChannel WHERE channelId = ?`
+	if _, err := c.db.Exec(query, channelId); err != nil {
+		return err
+	}
+	return nil
+}
