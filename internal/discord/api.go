@@ -75,8 +75,8 @@ func InteractionCallback(interactionId string, interactionToken string, body Int
 		return err
 	}
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Fail to response interaction %v %v", string(resBody), body)
+	if resp.StatusCode != 204 {
+		return fmt.Errorf("(%d) %v %v", resp.StatusCode, string(resBody), body)
 	}
 	return nil
 }

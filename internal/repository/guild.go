@@ -62,6 +62,37 @@ func (c Conn) InsertGuildChannel(guildId string, channelName string, channelId s
 	return nil
 }
 
+func (c Conn) UpdateGuildChannel(guildId string, channelId string) error {
+	tx, err := c.db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	resetQuery := "UPDATE GuildChannel SET isMain=false WHERE guildId = ?"
+	if _, err := tx.Exec(resetQuery, guildId); err != nil {
+		return err
+	}
+
+	updateQuery := "UPDATE GuildChannel SET isMain=true WHERE guildId = ? and channelId = ?"
+	res, err := tx.Exec(updateQuery, guildId, channelId)
+	if err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c Conn) GetGuildDMChannels(guildId string) ([]GuildChannel, error) {
 	query := `SELECT * FROM GuildChannel where guildId = ? and channelType = 0`
 

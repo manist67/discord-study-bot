@@ -40,6 +40,11 @@ type GuildMember struct {
 	Nick *string `json:"nick"`
 }
 
+type Guild struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type ChannelType int
 
 const (
@@ -105,20 +110,24 @@ type InteractionData struct {
 }
 
 type InteractionPayload struct {
-	Id    string          `json:"id"`
-	Token string          `json:"token"`
-	Data  InteractionData `json:"data"`
+	Id      string          `json:"id"`
+	Token   string          `json:"token"`
+	Data    InteractionData `json:"data"`
+	Guild   *Guild          `json:"guild"`
+	Channel *Channel        `json:"channel"`
 }
 
 type GuildCommandOptionType int
 
 const (
-	Mentionable GuildCommandOptionType = 9
+	ChannelOption GuildCommandOptionType = 7
+	Mentionable   GuildCommandOptionType = 9
 )
 
 type GuildCommandOption struct {
 	Type                     GuildCommandOptionType `json:"type"`
 	Name                     string                 `json:"name"`
+	Required                 bool                   `json:"required"`
 	Description              *string                `json:"description"`
 	DescriptionLocalizations *string                `json:"description_localizations"`
 }
