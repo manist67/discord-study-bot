@@ -37,14 +37,14 @@ func (s *Session) setResumeValue(resultURL string, sessionId string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	decodeString, err := url.QueryUnescape(resultURL)
+	decodeString, err := url.PathUnescape(resultURL)
 	if err != nil {
 		log.Fatalf("Fail to decode string %s", decodeString)
 		return
 	}
 
 	s.isReconnect = true
-	s.connectionURL = strings.Replace(decodeString, "wss://", "", 0)
+	s.connectionURL = strings.Replace(decodeString, "wss://", "", 1)
 	s.sessionId = sessionId
 }
 
