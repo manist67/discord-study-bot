@@ -9,7 +9,7 @@ import (
 )
 
 type Bot struct {
-	session       *discord.Session
+	session       *discord.Gateway
 	repo          *repository.Conn
 	applicationId string
 }
