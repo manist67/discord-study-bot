@@ -59,7 +59,17 @@ func (c Conn) GetMembersByIds(memberIds []string) ([]Member, error) {
 }
 
 func (c Conn) GetGuildMember(guildId string, memberId string) (*GuildMember, error) {
-	query := "SELECT guildId, memberId, nickname FROM GuildMember where guildId = ? and memberId = ?"
+	query := `SELECT 
+			gm.guildId
+			, m.memberName
+			, gm.memberId
+			, gm.nickname
+		FROM 
+			GuildMember as gm 
+		JOIN Member as m 
+			ON m.memberId = gm.memberId 
+		WHERE gm.guildId = ? and gm.memberId = ?`
+
 	var guildMember GuildMember
 	err := c.db.Get(&guildMember, query, guildId, memberId)
 	if err != nil {

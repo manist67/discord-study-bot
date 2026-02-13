@@ -35,7 +35,8 @@ type GuildResponse struct {
 }
 
 type Member struct {
-	Nickname string `json:"nickname"`
+	Nickname   string `json:"nickname"`
+	MemberName string `json:"memberName"`
 }
 type Participating struct {
 	Date     time.Time `json:"date"`
@@ -46,5 +47,6 @@ type MemberActivity struct {
 	Member            Member          `json:"member"`
 	Total             int             `json:"total"`
 	WeekTotal         int             `json:"weekTotal"`
+	IsOnline          bool            `json:"isOnline"`
 	ParticipatingList []Participating `json:"participatingList"`
 }

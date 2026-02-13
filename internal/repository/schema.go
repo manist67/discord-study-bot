@@ -20,9 +20,10 @@ type GuildChannel struct {
 }
 
 type GuildMember struct {
-	GuildId  string `db:"guildId"`
-	MemberId string `db:"memberId"`
-	Nickname string `db:"nickname"`
+	GuildId    string `db:"guildId"`
+	MemberId   string `db:"memberId"`
+	Nickname   string `db:"nickname"`
+	MemberName string `db:"memberName"`
 }
 
 type Member struct {

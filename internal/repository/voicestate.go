@@ -90,3 +90,22 @@ func (c *Conn) GetGuildStatistics(guildId string, now time.Time) ([]GuildStatist
 
 	return res, nil
 }
+
+func (c *Conn) GetIsOnSession(guildId string, memberId string) (bool, error) {
+	query := `
+		SELECT 
+			count(*) > 0 
+		FROM 
+			VoiceState 
+		WHERE 
+			leavedAt is null and guildId = ? and memberId =?
+	`
+
+	var isOnSession bool
+	err := c.db.Get(&isOnSession, query, guildId, memberId)
+	if err != nil {
+		return false, fmt.Errorf("GetIsOnSession : %v", err)
+	}
+
+	return isOnSession, nil
+}

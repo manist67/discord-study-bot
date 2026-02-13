@@ -7,8 +7,10 @@ export const Particiapting = z.object({
 
 export const MemberResponse = z.object({
   member: z.object({
-    nickname: z.string()
+    nickname: z.string(),
+    memberName: z.string(),
   }),
+  isOnline: z.boolean(),
   total: z.number(),
   weekTotal: z.number(),
   participatingList: z.array(Particiapting)

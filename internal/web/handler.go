@@ -105,12 +105,24 @@ func (a *App) memberInfo(c *gin.Context) {
 		return
 	}
 
+	isOnline, err := a.repo.GetIsOnSession(guildId, memberId)
+	if err != nil {
+		log.Printf("Error %v", err)
+		c.JSON(500, gin.H{
+			"error":   "SERVER_ERROR",
+			"message": err,
+		})
+		return
+	}
+
 	c.JSON(200, MemberActivity{
 		Member: Member{
-			Nickname: member.Nickname,
+			Nickname:   member.Nickname,
+			MemberName: member.MemberName,
 		},
 		Total:             totalDuration,
 		WeekTotal:         weekDuration,
+		IsOnline:          isOnline,
 		ParticipatingList: list,
 	})
 }

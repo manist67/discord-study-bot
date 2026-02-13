@@ -51,7 +51,14 @@ export function MemberInfo() {
               {response.member.nickname.charAt(0).toUpperCase()}
             </div>
             <div className="info-wrapper">
-              <h1>{response.member.nickname}</h1>
+              <div className="name-wrapper">
+                <h1>{response.member.nickname}</h1>
+                <span className={`status-label ${response.isOnline ? 'status-online' : 'status-offline'}`}>
+                  <span className="status-dot"></span>
+                  {response.isOnline ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              <p className="member-name">{response.member.memberName}</p>
             </div>
           </div>
 
