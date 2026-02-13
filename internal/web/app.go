@@ -2,10 +2,14 @@ package web
 
 import (
 	"context"
+	"embed"
 	"study-bot/internal/repository"
 
 	"github.com/gin-gonic/gin"
 )
+
+//go:embed dist/*
+var contents embed.FS
 
 type App struct {
 	repo   *repository.Conn
@@ -21,6 +25,7 @@ func NewWeb(conn *repository.Conn) *App {
 	app.router.Handlers = append(app.router.Handlers, CORSMiddleware())
 
 	app.routes()
+	app.statics()
 
 	return &app
 }

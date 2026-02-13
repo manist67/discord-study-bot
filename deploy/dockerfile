@@ -1,15 +1,37 @@
+# 프론트 빌드
+FROM node:24 AS build_front
+
+WORKDIR /app
+COPY front/package.json front/package-lock.json ./
+
+RUN npm ci
+COPY front .
+
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN npm run build
+
+# 백엔드 빌드
 FROM golang:1.25.6-alpine AS build
 
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN go mod download                   
+RUN go mod download
 
 COPY . .
+COPY --from=build_front /app/dist ./internal/web/dist
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o /main ./cmd/bot/main.go
 
+
+# 실행 파일 생성
 FROM alpine:3.20 AS run
 
 WORKDIR /app
 COPY --from=build /main .
+COPY --from=build_front /app/dist /internal/web/dist
+
+EXPOSE 8080
 
 CMD ["./main"]
