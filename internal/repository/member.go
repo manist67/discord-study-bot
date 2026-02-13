@@ -58,6 +58,20 @@ func (c Conn) GetMembersByIds(memberIds []string) ([]Member, error) {
 	return members, nil
 }
 
+func (c Conn) GetGuildMember(guildId string, memberId string) (*GuildMember, error) {
+	query := "SELECT guildId, memberId, nickname FROM GuildMember where guildId = ? and memberId = ?"
+	var guildMember GuildMember
+	err := c.db.Get(&guildMember, query, guildId, memberId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("GetGuildMember %w", err)
+	}
+
+	return &guildMember, nil
+}
+
 func (c Conn) InsertGuildMember(guildId string, memberId string, nickname string) error {
 	query := `INSERT INTO GuildMember(guildId, memberId, nickname) 
 		VALUES (:guildId, :memberId, :nickname)

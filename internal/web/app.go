@@ -18,7 +18,10 @@ func NewWeb(conn *repository.Conn) *App {
 		router: gin.Default(),
 	}
 
+	app.router.Handlers = append(app.router.Handlers, CORSMiddleware())
+
 	app.routes()
+
 	return &app
 }
 

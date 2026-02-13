@@ -35,3 +35,9 @@ type GuildMemberForm struct {
 	MemberId string `db:"memberId"`
 	Nickname string `db:"nickname"`
 }
+
+type GetWeekDurationForm struct {
+	GuildId  string    `db:"guildId"`
+	MemberId string    `db:"memberId"`
+	Now      time.Time `db:"now"`
+}

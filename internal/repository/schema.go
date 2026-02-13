@@ -19,6 +19,12 @@ type GuildChannel struct {
 	IsMain      bool                `db:"isMain"`
 }
 
+type GuildMember struct {
+	GuildId  string `db:"guildId"`
+	MemberId string `db:"memberId"`
+	Nickname string `db:"nickname"`
+}
+
 type Member struct {
 	Idx        int
 	MemberName string
