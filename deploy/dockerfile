@@ -1,14 +1,11 @@
 # 프론트 빌드
-FROM node:24 AS build_front
+FROM node:24-alpine AS build_front
 
 WORKDIR /app
 COPY front/package.json front/package-lock.json ./
 
 RUN npm ci
 COPY front .
-
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
 
@@ -31,7 +28,5 @@ FROM alpine:3.20 AS run
 WORKDIR /app
 COPY --from=build /main .
 COPY --from=build_front /app/dist /internal/web/dist
-
-EXPOSE 8080
 
 CMD ["./main"]
