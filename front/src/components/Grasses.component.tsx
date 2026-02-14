@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import "./Grasses.component.scss"
 import { useState } from "react";
+import { formatDuration } from "../utils/dateString";
 
 type GrassesProps = {
   data: Map<string, number>
@@ -20,7 +21,7 @@ const getLevel = (duration: number) => {
     return 3;
   } else if (duration >= 1800) {
     return 2;
-  } else if (duration > 0) {
+  } else if (duration > 300) {
     return 1;
   }
   return 0;
@@ -64,7 +65,7 @@ export function Grasses({
             <div
               key={`grass-${date}`}
               className={`grass level-${level}`}
-              onMouseOver={(e) => handleMouseOver(e, `${date}: ${Math.floor(duration / 60)} minutes`)}
+              onMouseOver={(e) => handleMouseOver(e, `${date}: ${formatDuration(duration)}`)}
               onMouseOut={handleMouseOut}
             />
           )
@@ -72,11 +73,21 @@ export function Grasses({
       </div>
       <div className="grasses-tips-wrapper">
         <span>Less</span>
-        <div className="grass level-0"/>
-        <div className="grass level-1"/>
-        <div className="grass level-2"/>
-        <div className="grass level-3"/>
-        <div className="grass level-4"/>
+        <div className="grass level-0" 
+          onMouseOver={(e) => handleMouseOver(e, "Less then 5m")}
+          onMouseOut={handleMouseOut}/>
+        <div className="grass level-1"
+          onMouseOver={(e) => handleMouseOver(e, "Less then 30m")}
+          onMouseOut={handleMouseOut}/>
+        <div className="grass level-2"
+          onMouseOver={(e) => handleMouseOver(e, "Less then 1h")}
+          onMouseOut={handleMouseOut}/>
+        <div className="grass level-3"
+          onMouseOver={(e) => handleMouseOver(e, "Less then 2h")}
+          onMouseOut={handleMouseOut}/>
+        <div className="grass level-4"
+          onMouseOver={(e) => handleMouseOver(e, "More then 2h")}
+          onMouseOut={handleMouseOut}/>
         <span>More</span>
       </div>
     </div>
