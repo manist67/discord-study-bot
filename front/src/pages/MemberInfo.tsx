@@ -85,7 +85,7 @@ export function MemberInfo() {
           </div>
 
           <div className="detailed-activity-section">
-            <h2>Detailed Activity Record</h2>
+            <h2>일별 접속 기록</h2>
             <div className="activity-list">
               {sortedParticipatingList.slice(0, visibleCount).map((e, index) => (
                 <div className="activity-item" key={index}>

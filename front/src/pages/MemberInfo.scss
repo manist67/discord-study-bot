@@ -5,11 +5,12 @@
   font-family: 'Roboto', sans-serif;
   background-color: #f0f2f5;
   min-height: 100vh;
+  text-align: left;
 
   .profile-header {
     display: flex;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     background-color: white;
     padding: 1.5rem;
     border-radius: 8px;
@@ -37,8 +38,8 @@
       }
 
       h1 {
-        margin: 0;
-        font-size: 2rem;
+        margin: 0 0 8px 0;
+        font-size: 1.7rem;
         font-weight: 700;
         color: #333;
         text-align: left;
@@ -86,7 +87,7 @@
   .stats-section {
     display: flex;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 
     .stat-card {
       flex: 1;
@@ -100,15 +101,15 @@
       justify-content: center;
 
       .stat-label {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: #666;
         margin-bottom: 0.5rem;
       }
 
       .stat-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #333;
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #555;
       }
     }
   }
@@ -117,13 +118,13 @@
     background-color: white;
     padding: 1.5rem;
     border-radius: 8px;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 
     h2 {
       margin-top: 0;
       margin-bottom: 1rem;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: #333;
       border-bottom: 1px solid #eee;
       padding-bottom: 0.5rem;
@@ -160,7 +161,7 @@
     h2 {
       margin-top: 0;
       margin-bottom: 1rem;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: #333;
       border-bottom: 1px solid #eee;
       padding-bottom: 0.5rem;
@@ -176,7 +177,11 @@
         display: flex;
         justify-content: space-between;
         padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px dashed #dadada;
+
+        &:first-child {
+          padding-top: 0;
+        }
 
         &:last-child {
           border-bottom: none;

@@ -31,7 +31,7 @@ export function Grasses({
   data
 }: GrassesProps) {
   const [tooltip, setTooltip] = useState<Tooltip>({ show: false, x: 0, y: 0, content: '' });
-  const startDate = dayjs().subtract(364, "day");
+  const startDate = dayjs().subtract(363, "day");
   const grasses = Array.from({ length: 364 }, (_, idx) => {
     return startDate.add(idx, "day").format("YYYY-MM-DD");
   });
