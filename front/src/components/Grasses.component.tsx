@@ -27,15 +27,55 @@ const getLevel = (duration: number) => {
   return 0;
 }
 
+const MONTHES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+]
+
+const WEEKS = [
+  "일",
+  "월",
+  "화",
+  "수",
+  "목",
+  "금",
+  "토",
+]
+
 export function Grasses({
   data
 }: GrassesProps) {
   const [tooltip, setTooltip] = useState<Tooltip>({ show: false, x: 0, y: 0, content: '' });
   const startDate = dayjs().subtract(363, "day");
+  const monthItems = Array.from({ length: 52 }, (_, idx) => {
+    return MONTHES[startDate.add(idx, "week").month()]
+  }).map((e, idx, arr) => {
+    if(idx == 0) return e;
+    if(e == arr[idx-1]) return null;
+    return e
+  });
+  const weeksItems = Array.from({ length: 7 }, (_,idx) => {
+    return WEEKS[startDate.add(idx, "d").day()]
+  }).map((e, idx) => {
+    if(idx == 0) return e;
+    if(idx == 3) return e;
+    if(idx == 6) return e;
+    return null
+  });
+
   const grasses = Array.from({ length: 364 }, (_, idx) => {
     return startDate.add(idx, "day").format("YYYY-MM-DD");
   });
-
   const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>, content: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltip({
@@ -52,24 +92,33 @@ export function Grasses({
 
   return (
     <div className="Grasses">
-      <div className="grasses-wrapper">
-        {tooltip.show && (
-          <div className="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
-            {tooltip.content}
-          </div>
-        )}
-        {grasses.map((date) => {
-          const duration = data.get(date) ?? 0;
-          const level = getLevel(duration);
-          return (
-            <div
-              key={`grass-${date}`}
-              className={`grass level-${level}`}
-              onMouseOver={(e) => handleMouseOver(e, `${date}: ${formatDuration(duration)}`)}
-              onMouseOut={handleMouseOut}
-            />
-          )
+      <div className="month-viewer">
+        {monthItems.map((e, idx)=>{
+          if(e == null) return <span key={`week-${idx}`}/>
+          return <span key={`week-${idx}`}>{e}</span>
         })}
+      </div>
+      <div className="week-wrapper">
+        <div className="week-viewer">
+        {weeksItems.map(((e, idx) => {
+          if(e == null) return <span key={`day-of-week-${idx}`}/>
+          return <span key={`day-of-week-${idx}`}>{e}</span>
+        }))}
+        </div>
+        <div className="grasses-wrapper">
+          {grasses.map((date) => {
+            const duration = data.get(date) ?? 0;
+            const level = getLevel(duration);
+            return (
+              <div
+                key={`grass-${date}`}
+                className={`grass level-${level}`}
+                onMouseOver={(e) => handleMouseOver(e, `${date}: ${formatDuration(duration)}`)}
+                onMouseOut={handleMouseOut}
+              />
+            )
+          })}
+        </div>
       </div>
       <div className="grasses-tips-wrapper">
         <span>Less</span>
@@ -90,6 +139,11 @@ export function Grasses({
           onMouseOut={handleMouseOut}/>
         <span>More</span>
       </div>
+      {tooltip.show && (
+        <div className="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+          {tooltip.content}
+        </div>
+      )}
     </div>
   )
 }
