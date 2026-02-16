@@ -9,6 +9,8 @@ import (
 	"study-bot/internal/repository"
 	"study-bot/internal/web"
 	"syscall"
+	"time"
+	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
 )
@@ -21,6 +23,14 @@ func main() {
 
 	conn := repository.Open(os.Getenv("DB_URL"))
 	defer conn.Close()
+
+	tz := os.Getenv("TZ")
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		log.Fatalf("Your timezone string isn't invliad %s", tz)
+	}
+	time.Local = loc
+	log.Printf("Timezone : %s", loc.String())
 
 	web := web.NewWeb(conn)
 	bot := bot.NewBot(conn)

@@ -118,7 +118,7 @@ func (c *Connection) StartHeartbeat(ctx context.Context, event Event) {
 					return
 				}
 				c.lastAckReceive = false
-				log.Printf("heartbeat duration: %d", time.Duration(c.Interval))
+				log.Printf("heartbeat duration: %v", time.Now())
 				c.SendHeartbeat()
 			case <-ctx.Done():
 				t.Stop()
